@@ -9,6 +9,7 @@
 #include <QModelIndex>
 #include <QDebug>
 #include <QShortcut>
+#include <QFileDialog>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -18,11 +19,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //QGraphicsView 관련변수 초기화
     scene = new QGraphicsScene;
-//    QString img_path = "C:/AMD/SDC11388.JPG";
-//    QImage * img = new QImage(img_path);
-//    QPixmap buf = QPixmap::fromImage(*img);
-//    scene->addPixmap(buf);
-//    scene->setSceneRect(0,0,buf.width(), buf.height());
     ui->graphicsView->setScene(scene);
 
 
@@ -68,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->splitter->setStretchFactor(1,2);
 
 
+    result = new QImage;
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->qImgListWidget);
     connect(shortcut, SIGNAL(activated()), this, SLOT(SelectedItemDelete()));
@@ -76,10 +73,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(file_model_, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(FileViewUpdate(QModelIndex)));
     connect(ui->qImgListWidget, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(MakeImage()));
 
-
-
-
-
+    ui->actionSave->setDisabled(true);
 
 }
 
@@ -164,6 +158,9 @@ QIcon MainWindow::GetThumnail(QImage* src,int width, int height) {
  */
 
 void MainWindow::EnqueueImgModel(QModelIndex idx) {
+
+
+
     QString dir_path = current_dirpath_;
     QString file_name = idx.data().toString();
     QString ico_path = dir_path.append("\\").append(file_name);
@@ -175,6 +172,10 @@ void MainWindow::EnqueueImgModel(QModelIndex idx) {
 
     QListWidgetItem* item = new QListWidgetItem(icon, file_name);
     ui->qImgListWidget->addItem(item);
+
+
+//    if (img_list_.size())
+//        ui->actionSave->setDisabled(false);
 
     //이미지 붙이는 작업
     MakeImage();
@@ -225,7 +226,17 @@ void MainWindow::SelectedItemDelete() {
  */
 
 void MainWindow::MakeImage() {
+    if (img_list_.size())
+        ui->actionSave->setDisabled(false);
+    else {
+        ui->actionSave->setDisabled(true);
+        scene->clear();
+        return;
+    }
+
+
     scene->clear();
+    delete result;
 
     int buffer_width = 0;
     int buffer_height = 0;
@@ -236,9 +247,9 @@ void MainWindow::MakeImage() {
         buffer_height += buffer->height();
     }
 
-    QImage result(buffer_width, buffer_height, QImage::Format_ARGB32);
+    result = new QImage(buffer_width, buffer_height, QImage::Format_ARGB32);
     QPainter painter;
-    painter.begin(&result);
+    painter.begin(result);
 
     int temp_height = 0;
     for (int i=0; i<img_list_.size(); ++i) {
@@ -246,10 +257,20 @@ void MainWindow::MakeImage() {
         painter.drawImage(0, temp_height, *buffer);
         temp_height += buffer->height();
     }
-    QPixmap buf = QPixmap::fromImage(result);
+    QPixmap buf = QPixmap::fromImage(*result);
     scene->addPixmap(buf);
     scene->setSceneRect(0,0, buffer_width, buffer_height);
-    QRectF p = scene->sceneRect();
+    QRectF p = scene->sceneRect();    
+
+}
 
 
+void MainWindow::on_actionSave_triggered()
+{
+    QFileDialog dlg;
+    dlg.setAcceptMode(QFileDialog::AcceptSave);
+    QString fileName = dlg.getSaveFileName();
+    qDebug() << fileName;
+
+    result->save(fileName);
 }

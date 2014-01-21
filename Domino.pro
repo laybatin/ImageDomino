@@ -20,3 +20,6 @@ HEADERS  += mainwindow.h \
     myqgraphicsview.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    ActionBarIcon.qrc

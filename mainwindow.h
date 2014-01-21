@@ -48,6 +48,10 @@ private slots:
     void SelectedItemDelete();
     void MakeImage();
 
+    void on_actionSave_triggered();
+
+
+
 private:
     Ui::MainWindow *ui;
     QGraphicsScene* scene;
@@ -58,7 +62,7 @@ private:
     QStandardItemModel * file_model_;
     QFileInfoList extfilter_imgs_;
     QStringList ext_lists_;
-
+    QImage* result;
     //실제이미지를 저장
     QList<QImage*> img_list_;
 

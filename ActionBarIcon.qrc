@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/Icon">
+        <file>Icon/diskette.png</file>
+        <file>Icon/domino.png</file>
+    </qresource>
+</RCC>

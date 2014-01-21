@@ -49,12 +49,7 @@ void MyQGraphicsView::scalingTime(qreal num) {
 
 
     qreal factor = 1.0 + qreal(_numScheduledScalings ) / 300.0;
-
-
     scale(factor, factor);
-
-
-
 }
 
 void MyQGraphicsView::animFinished() {

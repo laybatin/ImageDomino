@@ -17,7 +17,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>ImageDomino</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ActionBarIcon.qrc">
+    <normaloff>:/Icon/Icon/domino.png</normaloff>:/Icon/Icon/domino.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
@@ -149,8 +153,21 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionSave"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset resource="ActionBarIcon.qrc">
+     <normaloff>:/Icon/Icon/diskette.png</normaloff>:/Icon/Icon/diskette.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="toolTip">
+    <string>만들어진 이미지를 저장합니다.</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -160,6 +177,8 @@
    <header>myqgraphicsview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="ActionBarIcon.qrc"/>
+ </resources>
  <connections/>
 </ui>
