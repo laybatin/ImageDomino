@@ -5,7 +5,7 @@
 #include <QGraphicsScene>
 #include <QFileSystemModel>
 #include <QStandardItemModel>
-
+#include <QFileSystemWatcher>
 namespace Ui {
 class MainWindow;
 }
@@ -47,7 +47,7 @@ private slots:
     void FileViewUpdate(QModelIndex);
     void SelectedItemDelete();
     void MakeImage();
-
+    void chnageDir(QString);
     void on_actionSave_triggered();
 
 
@@ -59,6 +59,7 @@ private:
     QString current_dirpath_;
     QFileSystemModel* dir_model_;
     QFileSystemModel* files_;
+    QFileSystemWatcher* files_watcher_;
     QStandardItemModel * file_model_;
     QFileInfoList extfilter_imgs_;
     QStringList ext_lists_;

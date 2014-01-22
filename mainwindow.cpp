@@ -10,6 +10,8 @@
 #include <QDebug>
 #include <QShortcut>
 #include <QFileDialog>
+#include <QFileSystemWatcher>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -33,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeView->hideColumn(2);
     ui->treeView->hideColumn(3);
 
+    //
+    files_watcher_ = new QFileSystemWatcher;
 
     //file_model_ 초기화
     for(unsigned int i=0; i<kExtName::CNT; i++) {
@@ -40,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     files_ = new QFileSystemModel();
     file_model_ = new QStandardItemModel();
+    files_->setFilter(QDir::NoDotAndDotDot | QDir::Files);
     files_->setNameFilters(ext_lists_);
     files_->setNameFilterDisables(false);
     ui->fileView->setModel(file_model_);
@@ -67,13 +72,14 @@ MainWindow::MainWindow(QWidget *parent) :
     result = new QImage;
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->qImgListWidget);
-    connect(shortcut, SIGNAL(activated()), this, SLOT(SelectedItemDelete()));
-    connect(dir_model_, SIGNAL(directoryLoaded(QString)), this, SLOT(DirFilesFilter(QString)));
+    connect(shortcut, SIGNAL(activated()), this, SLOT(SelectedItemDelete()));    
+    connect(files_, SIGNAL(directoryLoaded(QString)), this, SLOT(DirFilesFilter(QString)));
     connect(ui->fileView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EnqueueImgModel(QModelIndex)));
     connect(file_model_, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(FileViewUpdate(QModelIndex)));
     connect(ui->qImgListWidget, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(MakeImage()));
-
+    connect(files_watcher_, SIGNAL(directoryChanged(QString)), this ,SLOT(chnageDir(QString)));
     ui->actionSave->setDisabled(true);
+
 
 }
 
@@ -88,6 +94,8 @@ MainWindow::~MainWindow()
  * 그래서 디렉토리를 조회하여 직접 리스트를 만듬
  */
 void MainWindow::DirFilesFilter(QString path) {
+    qDebug() << "directoryLoaded";
+
     QModelIndex fileIdx = files_->index(path);
     int numRows = files_->rowCount(fileIdx);
 
@@ -101,6 +109,7 @@ void MainWindow::DirFilesFilter(QString path) {
             extfilter_imgs_ << fileInfo;
     }
 
+
     //extfilter_imgs 파일들을 모델로 만든다.
     FilesModelUpdate();
 
@@ -108,12 +117,16 @@ void MainWindow::DirFilesFilter(QString path) {
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
+    files_watcher_->removePath(current_dirpath_);
     QString sPath = dir_model_->fileInfo(index).absoluteFilePath();
 
 
     qDebug() << "path = " << sPath;
     QModelIndex fileIdx = files_->setRootPath(sPath);        //파일모델 업데이트
     current_dirpath_ = sPath;
+
+    //watcher 업데이트
+    files_watcher_->addPath(sPath);
 }
 
 
@@ -138,6 +151,7 @@ void MainWindow::FilesModelUpdate() {
             file_model_->appendRow(item);
         }
     }
+
 
     extfilter_imgs_.clear();;
 
@@ -168,14 +182,23 @@ void MainWindow::EnqueueImgModel(QModelIndex idx) {
     QImage* img_buffer = new QImage(ico_path);
     img_list_ << img_buffer;
 
-    QIcon icon = GetThumnail(img_buffer, 161, 100);
+
+
+    int xWidth=150, xHeight=100;
+
+    double src_width = img_buffer->width();
+    double src_height = img_buffer->height();
+
+    xHeight = src_height / src_width * xWidth;
+
+    qDebug() << xWidth << "*" << xHeight;
+
+
+    QIcon icon = GetThumnail(img_buffer, xWidth, xHeight);
 
     QListWidgetItem* item = new QListWidgetItem(icon, file_name);
     ui->qImgListWidget->addItem(item);
 
-
-//    if (img_list_.size())
-//        ui->actionSave->setDisabled(false);
 
     //이미지 붙이는 작업
     MakeImage();
@@ -273,4 +296,9 @@ void MainWindow::on_actionSave_triggered()
     qDebug() << fileName;
 
     result->save(fileName);
+}
+
+void MainWindow::chnageDir(QString path) {
+
+    qDebug() << "Change Dir " << path;
 }
