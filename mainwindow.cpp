@@ -11,23 +11,35 @@
 #include <QShortcut>
 #include <QFileDialog>
 #include <QFileSystemWatcher>
+#include <QLabel>
+#include "settingdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    scene(new QGraphicsScene),
+    dir_model_(new QFileSystemModel()),
+    files_(new QFileSystemModel()),
+    files_watcher_(new QFileSystemWatcher),
+    file_model_(new QStandardItemModel()),
+    img_queue_model_(new QStandardItemModel()),
+    result(NULL),
+    img_spacing_(0),
+    img_margin_(0),
+    status_text_("Select")
 {
     ui->setupUi(this);
-
+    statusBar()->addWidget(&status_text_);
 
     //QGraphicsView 관련변수 초기화
-    scene = new QGraphicsScene;
+    //scene = new QGraphicsScene;
     ui->graphicsView->setScene(scene);
 
 
 
     //dir_model_ 초기화
     QString path = "./";
-    dir_model_ = new QFileSystemModel();
+    //dir_model_ = new QFileSystemModel();
     dir_model_->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
     dir_model_->setRootPath(path);
     ui->treeView->setModel(dir_model_);
@@ -36,14 +48,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeView->hideColumn(3);
 
     //
-    files_watcher_ = new QFileSystemWatcher;
+    //files_watcher_ = new QFileSystemWatcher;
 
     //file_model_ 초기화
     for(unsigned int i=0; i<kExtName::CNT; i++) {
         ext_lists_ << kExtName::STRING[i];
     }
-    files_ = new QFileSystemModel();
-    file_model_ = new QStandardItemModel();
+    //files_ = new QFileSystemModel();
+    //file_model_ = new QStandardItemModel();
     files_->setFilter(QDir::NoDotAndDotDot | QDir::Files);
     files_->setNameFilters(ext_lists_);
     files_->setNameFilterDisables(false);
@@ -56,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //qImageListWidget 초기화
-    img_queue_model_ = new QStandardItemModel();
+    //img_queue_model_ = new QStandardItemModel();
     ui->qImgListWidget->setViewMode(QListView::IconMode);
     ui->qImgListWidget->setGridSize(QSize(170,115));
     ui->qImgListWidget->setFlow(QListView::LeftToRight);
@@ -69,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->splitter->setStretchFactor(1,2);
 
 
-    result = new QImage;
+    //result = new QImage;
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->qImgListWidget);
     connect(shortcut, SIGNAL(activated()), this, SLOT(SelectedItemDelete()));    
@@ -259,26 +271,33 @@ void MainWindow::MakeImage() {
 
 
     scene->clear();
-    delete result;
+    if (result != NULL)
+        delete result;
 
     int buffer_width = 0;
     int buffer_height = 0;
-    QImage* buffer;
-    for(int i=0; i<img_list_.size(); ++i) {
-        buffer = img_list_.at(i);
-        buffer_width = buffer->width();
-        buffer_height += buffer->height();
+    QImage* img_buffer;
+    for(int k=0; k<img_list_.size(); k++) {
+        img_buffer = img_list_.at(k);
+        buffer_width = img_buffer->width();
+        buffer_height = buffer_height + img_buffer->height() + img_spacing_;
     }
+
+    buffer_height -= img_spacing_;
+    buffer_width += img_margin_;
 
     result = new QImage(buffer_width, buffer_height, QImage::Format_ARGB32);
     QPainter painter;
     painter.begin(result);
+    painter.fillRect(result->rect(),Qt::white);
 
     int temp_height = 0;
-    for (int i=0; i<img_list_.size(); ++i) {
-        buffer = img_list_.at(i);
-        painter.drawImage(0, temp_height, *buffer);
-        temp_height += buffer->height();
+    for (int i=0; i<img_list_.size(); i++) {
+        img_buffer = img_list_.at(i);
+        painter.drawImage(0, temp_height, *img_buffer);
+        temp_height += img_buffer->height();
+        if (img_spacing_ > 0)
+                temp_height += img_spacing_;
     }
     QPixmap buf = QPixmap::fromImage(*result);
     scene->addPixmap(buf);
@@ -302,3 +321,22 @@ void MainWindow::chnageDir(QString path) {
 
     qDebug() << "Change Dir " << path;
 }
+
+void MainWindow::on_actionSetting_triggered()
+{
+    SettingDialog dialog;
+    dialog.SetMargin(img_margin_);
+    dialog.SetSpacing(img_spacing_);
+    int dialogResult = dialog.exec();
+
+
+
+    if(dialogResult == QDialog::Accepted) {
+        img_spacing_ = dialog.GetSpacing();
+        img_margin_ = dialog.GetMargin();
+    }
+
+
+
+}
+

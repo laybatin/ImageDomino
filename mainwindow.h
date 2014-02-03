@@ -6,6 +6,7 @@
 #include <QFileSystemModel>
 #include <QStandardItemModel>
 #include <QFileSystemWatcher>
+#include <QLabel>
 namespace Ui {
 class MainWindow;
 }
@@ -52,10 +53,14 @@ private slots:
 
 
 
+    void on_actionSetting_triggered();
+
 private:
     Ui::MainWindow *ui;
     QGraphicsScene* scene;
 
+    //status bar
+    QLabel status_text_;
     QString current_dirpath_;
     QFileSystemModel* dir_model_;
     QFileSystemModel* files_;
@@ -69,6 +74,12 @@ private:
 
     //listwidget에 보여질 모델
     QStandardItemModel* img_queue_model_;
+
+
+    //Image Setting value
+    int img_spacing_;
+    int img_margin_;
+
 
 
 

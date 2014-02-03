@@ -14,12 +14,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    myqgraphicsview.cpp
+    myqgraphicsview.cpp \
+    settingdialog.cpp
 
 HEADERS  += mainwindow.h \
-    myqgraphicsview.h
+    myqgraphicsview.h \
+    settingdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    settingdialog.ui
 
 RESOURCES += \
     ActionBarIcon.qrc
